@@ -3,83 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ScienceLab | E-book Store</title>
+    <title>সাইন্সল্যাব</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
 
     <header>
-        <a href="index.html" class="logo">সাইন্সল্যাব</a>
-        <nav class="nav-links">
-            <a href="index.html">হোম</a>
-            <a href="admin.html">এডমিন</a>
-        </nav>
+        <div class="navbar">
+            <a href="index.html" class="logo">সাইন্সল্যাব</a>
+            
+            <div class="hamburger" onclick="toggleMenu()"><i class="fas fa-bars"></i></div>
+
+            <nav class="nav-menu" id="navMenu">
+                <a href="index.html" class="nav-link">হোম</a>
+                
+                <div class="dropdown">
+                    <a class="nav-link dropbtn">বইসমূহ <i class="fas fa-caret-down"></i></a>
+                    <div class="dropdown-content">
+                        <a href="#cat-HSC">HSC একাডেমিক</a>
+                        <a href="#cat-Admission">এডমিশন</a>
+                        <a href="#cat-Science">বিজ্ঞান</a>
+                        <a href="#cat-Novel">উপন্যাস</a>
+                    </div>
+                </div>
+
+                <a href="admin.html" class="nav-link">এডমিন</a>
+            </nav>
+        </div>
     </header>
 
-
-    <div class="slider-container" style="max-width: 1200px; margin: 20px auto; padding: 0 20px;">
-    <div id="banner-display" style="width: 100%; height: 350px; border-radius: 10px; overflow: hidden; position: relative;">
-        </div>
-</div>
-
-<script type="module">
-    import { db, collection, getDocs, query, orderBy } from './firebase-config.js';
-    
-    // Banner Loading Logic
-    async function showBanners() {
-        const q = query(collection(db, "banners"), orderBy("createdAt", "desc"));
-        const snapshot = await getDocs(q);
-        const bannerBox = document.getElementById('banner-display');
-        
-        if (!snapshot.empty) {
-            // আপাতত প্রথম (লেটেস্ট) ব্যানার দেখাচ্ছি
-            const data = snapshot.docs[0].data(); 
-            bannerBox.innerHTML = `
-                <a href="${data.link || '#'}" style="display:block; height:100%;">
-                    <img src="${data.image}" style="width: 100%; height: 100%; object-fit: cover;">
-                </a>
-            `;
-        }
-    }
-    showBanners();
-</script>
-
-    <div class="container">
-        <h2 style="margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 10px;">জনপ্রিয় বইসমূহ</h2>
-        <div id="product-list" class="product-grid">
-            <p>লোড হচ্ছে...</p>
-        </div>
+    <div class="slider-container" id="hero-slider">
+        <a class="prev" onclick="plusSlides(-1)">&#10094;</a>
+        <a class="next" onclick="plusSlides(1)">&#10095;</a>
     </div>
 
-    <footer>
-        <p>যোগাযোগ: 01715247588 | ইমেইল: eco452@gmail.com</p>
-        <p>&copy; ২০২৫ সাইন্সল্যাব - সর্বস্বত্ব সংরক্ষিত</p>
-    </footer>
+    <div id="main-content">
+        <div style="text-align:center; padding: 20px;">লোড হচ্ছে...</div>
+    </div>
 
     <script type="module">
-        import { db, collection, getDocs } from './firebase-config.js';
+        import { db, collection, getDocs, query, orderBy, where } from './firebase-config.js';
 
-        const productList = document.getElementById('product-list');
-
-        async function loadProducts() {
-            const querySnapshot = await getDocs(collection(db, "products"));
-            productList.innerHTML = '';
+        // --- SLIDER LOGIC ---
+        async function loadSlider() {
+            const q = query(collection(db, "banners"), orderBy("createdAt", "desc"));
+            const snap = await getDocs(q);
+            const container = document.getElementById('hero-slider');
+            let html = '';
             
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const card = `
-                    <a href="product.html?id=${doc.id}" class="product-card">
-                        <img src="${data.image}" alt="${data.title}" class="product-img">
-                        <div class="product-info">
-                            <h3 class="product-title">${data.title}</h3>
-                            <div class="product-price">৳ ${data.price}</div>
-                        </div>
-                    </a>
-                `;
-                productList.innerHTML += card;
+            if(snap.empty) {
+                container.innerHTML = '<p style="text-align:center; padding:20px;">ব্যানার নেই</p>';
+                return;
+            }
+
+            snap.forEach(doc => {
+                html += `<div class="slide fade"><img src="${doc.data().image}"></div>`;
             });
+            // Keep buttons
+            html += `<a class="prev" onclick="plusSlides(-1)">&#10094;</a><a class="next" onclick="plusSlides(1)">&#10095;</a>`;
+            container.innerHTML = html;
+            showSlides(slideIndex);
+            
+            // Auto Slide
+            setInterval(() => plusSlides(1), 5000);
         }
-        loadProducts();
+        loadSlider();
+
+        // --- BOOK LOADING LOGIC (Category Wise) ---
+        const categories = [
+            { id: 'HSC', title: 'HSC একাডেমিক বই' },
+            { id: 'Admission', title: 'এডমিশন টেস্ট' },
+            { id: 'Science', title: 'জনপ্রিয় বিজ্ঞান' },
+            { id: 'Novel', title: 'উপন্যাস ও সাহিত্য' },
+            { id: 'History', title: 'ইতিহাস ও ঐতিহ্য' }
+        ];
+
+        async function loadBooks() {
+            const mainContent = document.getElementById('main-content');
+            mainContent.innerHTML = ''; // Clear loading
+
+            for (const cat of categories) {
+                // Query specific category
+                const q = query(collection(db, "products"), where("category", "==", cat.id));
+                const snap = await getDocs(q);
+
+                if (!snap.empty) {
+                    let bookCards = '';
+                    snap.forEach(doc => {
+                        const data = doc.data();
+                        bookCards += `
+                            <a href="product.html?id=${doc.id}" class="product-card">
+                                <img src="${data.image}" class="product-img">
+                                <div class="product-info">
+                                    <h3 class="product-title">${data.title}</h3>
+                                    <div class="product-price">৳ ${data.price}</div>
+                                </div>
+                            </a>
+                        `;
+                    });
+
+                    // Add Section HTML
+                    const sectionHtml = `
+                        <div class="category-section" id="cat-${cat.id}">
+                            <div class="section-title">
+                                ${cat.title}
+                                <small style="font-size: 14px; color: #666;">আরও দেখুন <i class="fas fa-arrow-right"></i></small>
+                            </div>
+                            <div class="scroll-container">
+                                ${bookCards}
+                            </div>
+                        </div>
+                    `;
+                    mainContent.innerHTML += sectionHtml;
+                }
+            }
+        }
+        loadBooks();
+
+    </script>
+
+    <script>
+        // Mobile Menu Toggle
+        function toggleMenu() {
+            document.getElementById("navMenu").classList.toggle("active");
+        }
+
+        // Slider Logic
+        let slideIndex = 1;
+        function plusSlides(n) { showSlides(slideIndex += n); }
+        function showSlides(n) {
+            let i;
+            let slides = document.getElementsByClassName("slide");
+            if (slides.length === 0) return;
+            if (n > slides.length) {slideIndex = 1}
+            if (n < 1) {slideIndex = slides.length}
+            for (i = 0; i < slides.length; i++) { slides[i].style.display = "none"; }
+            slides[slideIndex-1].style.display = "block";
+        }
     </script>
 </body>
 </html>
