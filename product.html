@@ -5,17 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>বইয়ের বিস্তারিত | সাইন্সল্যাব</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
 
     <header>
-        <a href="index.html" class="logo">সাইন্সল্যাব</a>
+        <div class="navbar">
+            <a href="index.html" class="logo">সাইন্সল্যাব</a>
+            <a href="index.html" class="nav-link"><i class="fas fa-home"></i> হোম</a>
+        </div>
     </header>
 
     <div class="container">
+        
         <div class="details-wrapper" id="details-container">
-            <p>তথ্য লোড হচ্ছে...</p>
+            <div style="text-align:center; padding: 50px;">তথ্য লোড হচ্ছে...</div>
         </div>
+
+        <div id="related-products-section" style="display: none; margin-top: 50px; border-top: 1px solid #eee; padding-top: 30px;">
+            <div class="section-title">এই ক্যাটাগরির আরও বই</div>
+            <div class="scroll-container" id="related-list">
+                </div>
+        </div>
+
     </div>
 
     <footer>
@@ -23,111 +35,160 @@
             <div class="footer-section about">
                 <h3>সাইন্সল্যাব</h3>
                 <p>শিক্ষার্থীদের জন্য সুলভ মূল্যে একাডেমিক, এডমিশন এবং সাহিত্য বইয়ের বিশ্বস্ত প্রতিষ্ঠান।</p>
-                <div class="socials">
-                    <a href="#"><i class="fab fa-facebook"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-youtube"></i></a>
-                </div>
             </div>
-
-            <div class="footer-section links">
-                <h3>প্রয়োজনীয় লিংক</h3>
-                <ul>
-                    <li><a href="index.html">হোম</a></li>
-                    <li><a href="#cat-HSC">HSC একাডেমিক</a></li>
-                    <li><a href="#cat-Admission">এডমিশন টেস্ট</a></li>
-                    <li><a href="admin.html">এডমিন প্যানেল</a></li>
-                </ul>
-            </div>
-
             <div class="footer-section contact">
                 <h3>যোগাযোগ</h3>
-                <p><i class="fas fa-phone"></i> 01715247588</p>
-                <p><i class="fas fa-envelope"></i> eco452@gmail.com</p>
-                <p><i class="fas fa-map-marker-alt"></i> ঢাকা, বাংলাদেশ</p>
+                <p>01715247588</p>
             </div>
         </div>
-        <div class="footer-bottom">
-            &copy; ২০২৬ সাইন্সল্যাব | ডিজাইন ও ডেভেলপমেন্ট: মঞ্জুরুল হক
-        </div>
+        <div class="footer-bottom">&copy; ২০২৬ সাইন্সল্যাব</div>
     </footer>
 
     <script type="module">
-        import { db, doc, getDoc, collection, addDoc, serverTimestamp } from './firebase-config.js';
+        import { db, doc, getDoc, collection, addDoc, serverTimestamp, query, where, getDocs, limit } from './firebase-config.js';
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
         const container = document.getElementById('details-container');
+        const relatedSection = document.getElementById('related-products-section');
+        const relatedList = document.getElementById('related-list');
 
+        // ১. মেইন প্রোডাক্ট লোড করা
         async function loadProduct() {
-            if (!productId) return;
-            const docRef = doc(db, "products", productId);
-            const docSnap = await getDoc(docRef);
+            if (!productId) {
+                container.innerHTML = "<p>কোনো বই সিলেক্ট করা হয়নি।</p>";
+                return;
+            }
 
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                container.innerHTML = `
-                    <div class="details-img">
-                        <img src="${data.image}" alt="${data.title}">
-                    </div>
-                   <div class="details-info">
-    <h1>${data.title}</h1>
-    <div style="margin-top: 30px;">
-        <h3>বিবরণ</h3>
-        <div class="desc-text">${data.description}</div> </div>
-</div>
-                        <p>লেখক/প্রকাশনী: সাইন্সল্যাব</p>
-                        <span class="price-tag">৳ ${data.price}</span>
-                        <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee;">
-                            <h3>অর্ডার করতে নিচের তথ্য দিন:</h3>
-                            <form id="order-form">
-                                <div class="form-group">
-                                    <input type="text" id="name" placeholder="আপনার নাম" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="tel" id="phone" placeholder="মোবাইল নম্বর" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" id="address" placeholder="ঠিকানা" required>
-                                </div>
-                                <button type="submit" class="buy-btn">অর্ডার কনফার্ম করুন</button>
-                            </form>
+            try {
+                const docRef = doc(db, "products", productId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    // প্রোডাক্ট ডিটেইলস রেন্ডার
+                    container.innerHTML = `
+                        <div class="details-img">
+                            <img src="${data.image}" alt="${data.title}">
                         </div>
-                        <div style="margin-top: 30px;">
-                            <h3>বিবরণ</h3>
-                            <p>${data.description}</p>
+                        <div class="details-info">
+                            <h1 style="color: var(--primary);">${data.title}</h1>
+                            <p style="font-size: 16px; color: #555;">লেখক: <b>${data.author || 'অজানা'}</b></p>
+                            <p style="font-size: 14px; background: #e0f7fa; display: inline-block; padding: 3px 10px; border-radius: 15px; color: var(--primary);">
+                                ${formatCategory(data.category)}
+                            </p>
+                            
+                            <span class="price-tag" style="margin-top: 15px;">৳ ${data.price}</span>
+
+                            <div style="background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #eee; margin-top: 20px;">
+                                <h3 style="margin-bottom: 15px;">অর্ডার করতে আপনার তথ্য দিন:</h3>
+                                <form id="order-form">
+                                    <input type="text" id="name" class="admin-input" placeholder="আপনার নাম" required>
+                                    <input type="tel" id="phone" class="admin-input" placeholder="মোবাইল নম্বর" required>
+                                    <input type="text" id="address" class="admin-input" placeholder="সম্পূর্ণ ঠিকানা" required>
+                                    <button type="submit" class="buy-btn">অর্ডার কনফার্ম করুন</button>
+                                </form>
+                            </div>
+
+                            <div style="margin-top: 30px;">
+                                <h3>বইয়ের বিবরণ</h3>
+                                <div class="desc-text" style="color: #444;">${data.description ? data.description : 'কোনো বিবরণ নেই।'}</div>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    `;
 
-                // অর্ডার সাবমিট হ্যান্ডলার
-                document.getElementById('order-form').addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    const name = document.getElementById('name').value;
-                    const phone = document.getElementById('phone').value;
-                    const address = document.getElementById('address').value;
+                    // অর্ডার সাবমিট হ্যান্ডলার
+                    document.getElementById('order-form').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const btn = e.target.querySelector('button');
+                        btn.innerText = "অর্ডার প্রসেসিং হচ্ছে...";
+                        btn.disabled = true;
 
-                    try {
-                        await addDoc(collection(db, "orders"), {
-                            product: data.title,
-                            price: data.price,
-                            customerName: name,
-                            phone: phone,
-                            address: address,
-                            date: serverTimestamp()
-                        });
-                        alert("আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে! আমরা দ্রুত যোগাযোগ করবো।");
-                        window.location.href = "index.html";
-                    } catch (error) {
-                        alert("অর্ডার করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
-                        console.error(error);
+                        const name = document.getElementById('name').value;
+                        const phone = document.getElementById('phone').value;
+                        const address = document.getElementById('address').value;
+
+                        try {
+                            await addDoc(collection(db, "orders"), {
+                                productId: productId,
+                                product: data.title,
+                                price: data.price,
+                                customerName: name,
+                                phone: phone,
+                                address: address,
+                                status: 'Pending',
+                                date: serverTimestamp()
+                            });
+                            alert("ধন্যবাদ! আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে।");
+                            window.location.href = "index.html";
+                        } catch (error) {
+                            alert("অর্ডার করতে সমস্যা হয়েছে।");
+                            console.error(error);
+                            btn.innerText = "অর্ডার কনফার্ম করুন";
+                            btn.disabled = false;
+                        }
+                    });
+
+                    // ২. রিলেটেড প্রোডাক্ট লোড করা (একই ক্যাটাগরির)
+                    if (data.category) {
+                        loadRelatedProducts(data.category, productId);
                     }
-                });
 
-            } else {
-                container.innerHTML = "<p>দুঃখিত, বইটি পাওয়া যায়নি।</p>";
+                } else {
+                    container.innerHTML = "<p>দুঃখিত, বইটি ডাটাবেজে পাওয়া যায়নি।</p>";
+                }
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = "<p>তথ্য লোড করতে সমস্যা হয়েছে।</p>";
             }
         }
+
+        // রিলেটেড প্রোডাক্ট ফাংশন
+        async function loadRelatedProducts(category, currentId) {
+            // একই ক্যাটাগরির বই খোঁজা হচ্ছে (সর্বোচ্চ ৬টি)
+            const q = query(
+                collection(db, "products"), 
+                where("category", "==", category), 
+                limit(6)
+            );
+            
+            const snap = await getDocs(q);
+            
+            // যদি ১টির বেশি বই থাকে (বর্তমান বই বাদে)
+            if (snap.size > 1 || (snap.size === 1 && snap.docs[0].id !== currentId)) {
+                relatedSection.style.display = 'block';
+                relatedList.innerHTML = '';
+
+                snap.forEach(doc => {
+                    // বর্তমান বইটা যেন রিলেটেড লিস্টে না দেখায়
+                    if (doc.id !== currentId) {
+                        const rData = doc.data();
+                        const card = `
+                            <a href="product.html?id=${doc.id}" class="product-card" style="min-width: 160px;">
+                                <img src="${rData.image}" class="product-img" style="height: 200px;">
+                                <div class="product-info">
+                                    <h3 class="product-title" style="font-size: 14px;">${rData.title}</h3>
+                                    <div class="product-price" style="font-size: 16px;">৳ ${rData.price}</div>
+                                </div>
+                            </a>
+                        `;
+                        relatedList.innerHTML += card;
+                    }
+                });
+            }
+        }
+
+        // ক্যাটাগরি নাম সুন্দর করে দেখানোর জন্য
+        function formatCategory(cat) {
+            if(cat === 'HSC') return 'HSC একাডেমিক';
+            if(cat === 'Admission') return 'এডমিশন টেস্ট';
+            if(cat === 'Science') return 'বিজ্ঞান';
+            if(cat === 'Novel') return 'উপন্যাস';
+            if(cat === 'History') return 'ইতিহাস';
+            return cat;
+        }
+
         loadProduct();
     </script>
 </body>
