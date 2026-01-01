@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScienceLab | E-book Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <a href="index.html" class="logo">সাইন্সল্যাব</a>
+        <nav class="nav-links">
+            <a href="index.html">হোম</a>
+            <a href="admin.html">এডমিন</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h2 style="margin-bottom: 20px; border-left: 5px solid var(--primary); padding-left: 10px;">জনপ্রিয় বইসমূহ</h2>
+        <div id="product-list" class="product-grid">
+            <p>লোড হচ্ছে...</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>যোগাযোগ: 01715247588 | ইমেইল: eco452@gmail.com</p>
+        <p>&copy; ২০২৫ সাইন্সল্যাব - সর্বস্বত্ব সংরক্ষিত</p>
+    </footer>
+
+    <script type="module">
+        import { db, collection, getDocs } from './firebase-config.js';
+
+        const productList = document.getElementById('product-list');
+
+        async function loadProducts() {
+            const querySnapshot = await getDocs(collection(db, "products"));
+            productList.innerHTML = '';
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const card = `
+                    <a href="product.html?id=${doc.id}" class="product-card">
+                        <img src="${data.image}" alt="${data.title}" class="product-img">
+                        <div class="product-info">
+                            <h3 class="product-title">${data.title}</h3>
+                            <div class="product-price">৳ ${data.price}</div>
+                        </div>
+                    </a>
+                `;
+                productList.innerHTML += card;
+            });
+        }
+        loadProducts();
+    </script>
+</body>
+</html>
