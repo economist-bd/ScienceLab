@@ -1,50 +1,4 @@
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>বইয়ের বিস্তারিত | সাইন্সল্যাব</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body>
-
-    <header>
-        <div class="navbar">
-            <a href="index.html" class="logo">সাইন্সল্যাব</a>
-            <a href="index.html" class="nav-link"><i class="fas fa-home"></i> হোম</a>
-        </div>
-    </header>
-
-    <div class="container">
-        
-        <div class="details-wrapper" id="details-container">
-            <div style="text-align:center; padding: 50px;">তথ্য লোড হচ্ছে...</div>
-        </div>
-
-        <div id="related-products-section" style="display: none; margin-top: 50px; border-top: 1px solid #eee; padding-top: 30px;">
-            <div class="section-title">এই ক্যাটাগরির আরও বই</div>
-            <div class="scroll-container" id="related-list">
-                </div>
-        </div>
-
-    </div>
-
-    <footer>
-        <div class="footer-content">
-            <div class="footer-section about">
-                <h3>সাইন্সল্যাব</h3>
-                <p>শিক্ষার্থীদের জন্য সুলভ মূল্যে একাডেমিক, এডমিশন এবং সাহিত্য বইয়ের বিশ্বস্ত প্রতিষ্ঠান।</p>
-            </div>
-            <div class="footer-section contact">
-                <h3>যোগাযোগ</h3>
-                <p>01715247588</p>
-            </div>
-        </div>
-        <div class="footer-bottom">&copy; ২০২৬ সাইন্সল্যাব</div>
-    </footer>
-
-    <script type="module">
+<script type="module">
         import { db, doc, getDoc, collection, addDoc, serverTimestamp, query, where, getDocs, limit } from './firebase-config.js';
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -53,10 +7,16 @@
         const relatedSection = document.getElementById('related-products-section');
         const relatedList = document.getElementById('related-list');
 
-        // ১. মেইন প্রোডাক্ট লোড করা
+        console.log("Product Page Loaded. Product ID:", productId); // ডিবাগিং
+
         async function loadProduct() {
+            // ১. আইডি না থাকলে হোম পেইজে ফেরত পাঠাবে বা এরর দেখাবে
             if (!productId) {
-                container.innerHTML = "<p>কোনো বই সিলেক্ট করা হয়নি।</p>";
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 50px;">
+                        <h3>কোনো বই সিলেক্ট করা হয়নি!</h3>
+                        <p>দয়া করে <a href="index.html" style="color:var(--primary);">হোম পেইজ</a> থেকে একটি বই সিলেক্ট করুন।</p>
+                    </div>`;
                 return;
             }
 
@@ -65,9 +25,9 @@
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
+                    console.log("Product Found:", docSnap.data()); // ডিবাগিং
                     const data = docSnap.data();
                     
-                    // প্রোডাক্ট ডিটেইলস রেন্ডার
                     container.innerHTML = `
                         <div class="details-img">
                             <img src="${data.image}" alt="${data.title}">
@@ -98,98 +58,72 @@
                         </div>
                     `;
 
-                    // অর্ডার সাবমিট হ্যান্ডলার
+                    // অর্ডার লজিক
                     document.getElementById('order-form').addEventListener('submit', async (e) => {
                         e.preventDefault();
                         const btn = e.target.querySelector('button');
-                        btn.innerText = "অর্ডার প্রসেসিং হচ্ছে...";
+                        btn.innerText = "প্রসেসিং...";
                         btn.disabled = true;
-
-                        const name = document.getElementById('name').value;
-                        const phone = document.getElementById('phone').value;
-                        const address = document.getElementById('address').value;
 
                         try {
                             await addDoc(collection(db, "orders"), {
                                 productId: productId,
                                 product: data.title,
                                 price: data.price,
-                                customerName: name,
-                                phone: phone,
-                                address: address,
+                                customerName: document.getElementById('name').value,
+                                phone: document.getElementById('phone').value,
+                                address: document.getElementById('address').value,
                                 status: 'Pending',
                                 date: serverTimestamp()
                             });
-                            alert("ধন্যবাদ! আপনার অর্ডারটি সফলভাবে গ্রহণ করা হয়েছে।");
+                            alert("অর্ডার সফল হয়েছে!");
                             window.location.href = "index.html";
                         } catch (error) {
-                            alert("অর্ডার করতে সমস্যা হয়েছে।");
-                            console.error(error);
-                            btn.innerText = "অর্ডার কনফার্ম করুন";
+                            alert("অর্ডার ব্যর্থ হয়েছে: " + error.message);
                             btn.disabled = false;
                         }
                     });
 
-                    // ২. রিলেটেড প্রোডাক্ট লোড করা (একই ক্যাটাগরির)
-                    if (data.category) {
-                        loadRelatedProducts(data.category, productId);
-                    }
+                    // রিলেটেড প্রোডাক্ট লোড
+                    if (data.category) loadRelatedProducts(data.category, productId);
 
                 } else {
-                    container.innerHTML = "<p>দুঃখিত, বইটি ডাটাবেজে পাওয়া যায়নি।</p>";
+                    container.innerHTML = "<p>বইটি ডাটাবেজে নেই (ভুল আইডি)।</p>";
                 }
             } catch (err) {
-                console.error(err);
-                container.innerHTML = "<p>তথ্য লোড করতে সমস্যা হয়েছে।</p>";
+                console.error("Firebase Error:", err);
+                container.innerHTML = `<p style="color:red;">সমস্যা হয়েছে: ${err.message}.<br> আপনি কি লোকাল সার্ভার ব্যবহার করছেন?</p>`;
             }
         }
 
-        // রিলেটেড প্রোডাক্ট ফাংশন
         async function loadRelatedProducts(category, currentId) {
-            // একই ক্যাটাগরির বই খোঁজা হচ্ছে (সর্বোচ্চ ৬টি)
-            const q = query(
-                collection(db, "products"), 
-                where("category", "==", category), 
-                limit(6)
-            );
-            
-            const snap = await getDocs(q);
-            
-            // যদি ১টির বেশি বই থাকে (বর্তমান বই বাদে)
-            if (snap.size > 1 || (snap.size === 1 && snap.docs[0].id !== currentId)) {
-                relatedSection.style.display = 'block';
-                relatedList.innerHTML = '';
-
-                snap.forEach(doc => {
-                    // বর্তমান বইটা যেন রিলেটেড লিস্টে না দেখায়
-                    if (doc.id !== currentId) {
-                        const rData = doc.data();
-                        const card = `
-                            <a href="product.html?id=${doc.id}" class="product-card" style="min-width: 160px;">
-                                <img src="${rData.image}" class="product-img" style="height: 200px;">
-                                <div class="product-info">
-                                    <h3 class="product-title" style="font-size: 14px;">${rData.title}</h3>
-                                    <div class="product-price" style="font-size: 16px;">৳ ${rData.price}</div>
-                                </div>
-                            </a>
-                        `;
-                        relatedList.innerHTML += card;
-                    }
-                });
-            }
+            try {
+                const q = query(collection(db, "products"), where("category", "==", category), limit(6));
+                const snap = await getDocs(q);
+                if (snap.size > 1 || (snap.size === 1 && snap.docs[0].id !== currentId)) {
+                    relatedSection.style.display = 'block';
+                    relatedList.innerHTML = '';
+                    snap.forEach(doc => {
+                        if (doc.id !== currentId) {
+                            const rData = doc.data();
+                            relatedList.innerHTML += `
+                                <a href="product.html?id=${doc.id}" class="product-card" style="min-width: 160px;">
+                                    <img src="${rData.image}" class="product-img" style="height: 200px;">
+                                    <div class="product-info">
+                                        <h3 class="product-title" style="font-size: 14px;">${rData.title}</h3>
+                                        <div class="product-price" style="font-size: 16px;">৳ ${rData.price}</div>
+                                    </div>
+                                </a>`;
+                        }
+                    });
+                }
+            } catch (e) { console.log("Related product load error", e); }
         }
 
-        // ক্যাটাগরি নাম সুন্দর করে দেখানোর জন্য
         function formatCategory(cat) {
-            if(cat === 'HSC') return 'HSC একাডেমিক';
-            if(cat === 'Admission') return 'এডমিশন টেস্ট';
-            if(cat === 'Science') return 'বিজ্ঞান';
-            if(cat === 'Novel') return 'উপন্যাস';
-            if(cat === 'History') return 'ইতিহাস';
-            return cat;
+            const map = {'HSC': 'HSC একাডেমিক', 'Admission': 'এডমিশন টেস্ট', 'Science': 'বিজ্ঞান', 'Novel': 'উপন্যাস', 'History': 'ইতিহাস'};
+            return map[cat] || cat;
         }
 
         loadProduct();
     </script>
-</body>
-</html>
