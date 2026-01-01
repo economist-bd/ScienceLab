@@ -3,256 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>এডমিন প্যানেল | সাইন্সল্যাব</title>
+    <title>এডমিন প্যানেল</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body>
-
-    <div id="login-section" style="height: 100vh; display: flex; justify-content: center; align-items: center; background: #f0f2f5;">
-        <div class="card" style="width: 100%; max-width: 400px;">
-            <h2 style="text-align: center; color: var(--primary);">এডমিন লগইন</h2>
+    
+    <div id="login-section" style="height: 100vh; display: flex; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px;">
+            <h2 style="text-align: center;">এডমিন লগইন</h2>
             <form id="login-form">
                 <input type="email" id="admin-email" class="admin-input" placeholder="ইমেইল" required>
                 <input type="password" id="admin-pass" class="admin-input" placeholder="পাসওয়ার্ড" required>
-                <button type="submit" class="buy-btn" style="width: 100%;">প্রবেশ করুন</button>
+                <button type="submit" class="buy-btn">প্রবেশ করুন</button>
             </form>
         </div>
     </div>
 
     <div id="dashboard-section" class="admin-container" style="display: none;">
-        
         <div class="sidebar">
-            <h3><i class="fas fa-book-open"></i> সাইন্সল্যাব</h3>
-            <a onclick="showTab('orders')" class="menu-item active" id="btn-orders"><i class="fas fa-shopping-cart"></i> <span class="menu-text">অর্ডার সমূহ</span></a>
-            <a onclick="showTab('products')" class="menu-item" id="btn-products"><i class="fas fa-box"></i> <span class="menu-text">বই আপলোড</span></a>
-            <a onclick="showTab('banners')" class="menu-item" id="btn-banners"><i class="fas fa-images"></i> <span class="menu-text">ব্যানার/স্লাইডার</span></a>
-            <a id="logout-btn" class="menu-item" style="color: red; margin-top: 50px;"><i class="fas fa-sign-out-alt"></i> <span class="menu-text">লগআউট</span></a>
+            <h3>এডমিন প্যানেল</h3>
+            <a href="index.html" class="nav-link" style="display:block; margin-bottom: 20px; color: var(--primary);"><i class="fas fa-home"></i> হোম পেইজে যান</a>
+            
+            <a onclick="showSection('products')" style="display:block; cursor:pointer; margin-bottom:10px;">বই আপলোড/এডিট</a>
+            <a onclick="showSection('banners')" style="display:block; cursor:pointer; margin-bottom:10px;">ব্যানার</a>
+            <a id="logout-btn" style="display:block; cursor:pointer; color:red;">লগআউট</a>
         </div>
 
         <div class="main-content">
-            
-            <div id="tab-orders" class="tab-content">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>অর্ডার ম্যানেজমেন্ট</h2>
-                    </div>
-                    <div style="overflow-x: auto;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>তারিখ</th>
-                                    <th>গ্রাহক</th>
-                                    <th>বই & দাম</th>
-                                    <th>ঠিকানা</th>
-                                    <th>স্ট্যাটাস</th>
-                                    <th>অ্যাকশন</th>
-                                </tr>
-                            </thead>
-                            <tbody id="order-table-body">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div id="sec-products">
+                <h2>বই ম্যানেজমেন্ট</h2>
+                <form id="upload-form" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <input type="hidden" id="edit-id"> <input type="text" id="book-title" class="admin-input" placeholder="বইয়ের নাম" required>
+                    <input type="text" id="book-author" class="admin-input" placeholder="লেখকের নাম">
+                    
+                    <select id="book-category" class="admin-input" required>
+                        <option value="">ক্যাটাগরি সিলেক্ট করুন</option>
+                        <option value="HSC">HSC একাডেমিক</option>
+                        <option value="Admission">এডমিশন টেস্ট</option>
+                        <option value="Novel">উপন্যাস</option>
+                        <option value="Science">বিজ্ঞান</option>
+                        <option value="History">ইতিহাস</option>
+                    </select>
+
+                    <input type="number" id="book-price" class="admin-input" placeholder="দাম" required>
+                    <input type="url" id="book-image" class="admin-input" placeholder="ছবির লিংক" required>
+                    <textarea id="book-desc" class="admin-input" rows="5" placeholder="বিবরণ..."></textarea>
+                    
+                    <button type="submit" id="submit-btn" class="buy-btn">আপলোড করুন</button>
+                    <button type="button" id="cancel-edit" class="buy-btn" style="background: #666; display: none; margin-top: 5px;">বাতিল করুন</button>
+                </form>
+
+                <h3>বইয়ের তালিকা (এডিট করতে ক্লিক করুন)</h3>
+                <div id="admin-book-list" style="display: grid; gap: 10px;"></div>
             </div>
 
-            <div id="tab-products" class="tab-content" style="display: none;">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>নতুন বই যুক্ত করুন</h2>
-                    </div>
-                    <form id="upload-form">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <input type="text" id="book-title" class="admin-input" placeholder="বইয়ের নাম" required>
-                            <input type="text" id="book-author" class="admin-input" placeholder="লেখকের নাম">
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                            <input type="number" id="book-price" class="admin-input" placeholder="মূল্য (টাকা)" required>
-                            <input type="number" id="book-discount" class="admin-input" placeholder="ছাড়ের মূল্য (অপশনাল)">
-                        </div>
-                        <input type="url" id="book-image" class="admin-input" placeholder="ছবির ডাইরেক্ট লিংক (URL)" required>
-                        
-                        <label style="font-weight: bold; display: block; margin-bottom: 5px;">বইয়ের বিস্তারিত (সাজিয়ে লিখুন):</label>
-                        <textarea id="book-desc" class="admin-input" placeholder="বইয়ের বিবরণ লিখুন... (এখানে প্যারাগ্রাফ করে লিখলে ওয়েবসাইটেও প্যারাগ্রাফ আকারে দেখাবে)"></textarea>
-                        
-                        <button type="submit" class="buy-btn">বই পাবলিশ করুন</button>
-                    </form>
-                </div>
+            <div id="sec-banners" style="display: none;">
+                <h2>স্লাইডার ব্যানার</h2>
+                <form id="banner-form">
+                    <input type="url" id="banner-img" class="admin-input" placeholder="ব্যানার ছবির লিংক" required>
+                    <button type="submit" class="buy-btn">ব্যানার যুক্ত করুন</button>
+                </form>
             </div>
-
-            <div id="tab-banners" class="tab-content" style="display: none;">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>হোমপেইজ স্লাইডার/ব্যানার</h2>
-                    </div>
-                    <form id="banner-form">
-                        <input type="url" id="banner-img" class="admin-input" placeholder="ব্যানার ছবির লিংক (1200x400px recommended)" required>
-                        <input type="text" id="banner-link" class="admin-input" placeholder="ক্লিক করলে কোন লিংকে যাবে? (অপশনাল)">
-                        <button type="submit" class="buy-btn">ব্যানার যুক্ত করুন</button>
-                    </form>
-
-                    <h3 style="margin-top: 30px;">বর্তমান ব্যানার সমূহ:</h3>
-                    <div id="banner-list" class="product-grid" style="margin-top: 15px;">
-                        </div>
-                </div>
-            </div>
-
         </div>
     </div>
 
     <script type="module">
-        import { auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp } from './firebase-config.js';
+        import { auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp, query, orderBy } from './firebase-config.js';
 
-        const loginSection = document.getElementById('login-section');
-        const dashboardSection = document.getElementById('dashboard-section');
+        const loginSec = document.getElementById('login-section');
+        const dashSec = document.getElementById('dashboard-section');
 
-        // Tab Switching Logic
-        window.showTab = (tabName) => {
-            document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById('tab-' + tabName).style.display = 'block';
-            document.getElementById('btn-' + tabName).classList.add('active');
-        };
-
-        // Authentication State
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                loginSection.style.display = 'none';
-                dashboardSection.style.display = 'flex';
-                loadOrders(); // Load initially
-                loadBanners();
-            } else {
-                loginSection.style.display = 'flex';
-                dashboardSection.style.display = 'none';
-            }
+        // Auth Check
+        onAuthStateChanged(auth, user => {
+            if(user) { loginSec.style.display = 'none'; dashSec.style.display = 'flex'; loadAdminBooks(); }
+            else { loginSec.style.display = 'flex'; dashSec.style.display = 'none'; }
         });
 
         // Login
-        document.getElementById('login-form').addEventListener('submit', (e) => {
+        document.getElementById('login-form').addEventListener('submit', e => {
             e.preventDefault();
-            const email = document.getElementById('admin-email').value;
-            const pass = document.getElementById('admin-pass').value;
-            signInWithEmailAndPassword(auth, email, pass).catch(err => alert("ভুল ইমেইল বা পাসওয়ার্ড!"));
+            signInWithEmailAndPassword(auth, document.getElementById('admin-email').value, document.getElementById('admin-pass').value)
+            .catch(err => alert("ভুল তথ্য!"));
         });
-
-        // Logout
         document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
 
-        // ------------------ PRODUCT UPLOAD ------------------
-        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+        // --- PRODUCT UPLOAD & EDIT LOGIC ---
+        const form = document.getElementById('upload-form');
+        let isEditing = false;
+
+        form.addEventListener('submit', async e => {
             e.preventDefault();
-            // Data collection
             const data = {
                 title: document.getElementById('book-title').value,
                 author: document.getElementById('book-author').value,
+                category: document.getElementById('book-category').value, // Category
                 price: document.getElementById('book-price').value,
-                discountPrice: document.getElementById('book-discount').value,
                 image: document.getElementById('book-image').value,
-                description: document.getElementById('book-desc').value, // Line breaks are preserved in textarea
+                description: document.getElementById('book-desc').value,
                 createdAt: serverTimestamp()
             };
 
             try {
-                await addDoc(collection(db, "products"), data);
-                alert("বই সফলভাবে আপলোড হয়েছে!");
-                e.target.reset();
-            } catch (err) { alert("সমস্যা হয়েছে: " + err.message); }
+                if (isEditing) {
+                    // Update existing
+                    const id = document.getElementById('edit-id').value;
+                    await updateDoc(doc(db, "products", id), data);
+                    alert("আপডেট সফল হয়েছে!");
+                    resetForm();
+                } else {
+                    // Add new
+                    await addDoc(collection(db, "products"), data);
+                    alert("বই যুক্ত হয়েছে!");
+                    form.reset();
+                }
+                loadAdminBooks();
+            } catch(err) { alert(err.message); }
         });
 
-        // ------------------ ORDER MANAGEMENT ------------------
-        async function loadOrders() {
-            const q = query(collection(db, "orders"), orderBy("date", "desc"));
-            const snapshot = await getDocs(q);
-            const tbody = document.getElementById('order-table-body');
-            tbody.innerHTML = '';
-
-            snapshot.forEach(docSnap => {
-                const order = docSnap.data();
-                const id = docSnap.id;
-                
-                // Status Class Logic
-                let badgeClass = 'badge-pending';
-                if(order.status === 'Shipped') badgeClass = 'badge-shipped';
-                if(order.status === 'Delivered') badgeClass = 'badge-delivered';
-                if(order.status === 'Cancelled') badgeClass = 'badge-cancelled';
-
-                const row = `
-                    <tr>
-                        <td>${order.date ? new Date(order.date.toDate()).toLocaleDateString('bn-BD') : '-'}</td>
-                        <td>${order.customerName}<br><small>${order.phone}</small></td>
-                        <td>${order.product}<br>৳${order.price}</td>
-                        <td style="max-width: 200px;">${order.address}</td>
-                        <td><span class="badge ${badgeClass}" id="badge-${id}">${order.status || 'Pending'}</span></td>
-                        <td>
-                            <select class="status-select" onchange="updateStatus('${id}', this.value)">
-                                <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                                <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                                <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                            </select>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        }
-
-        // Status Update Function needs to be global
-        window.updateStatus = async (id, newStatus) => {
-            try {
-                const orderRef = doc(db, "orders", id);
-                await updateDoc(orderRef, { status: newStatus });
-                
-                // Badge Update UI instantly
-                const badge = document.getElementById(`badge-${id}`);
-                badge.innerText = newStatus;
-                badge.className = `badge badge-${newStatus.toLowerCase()}`;
-                
-                // Optional: Alert
-                // alert("স্ট্যাটাস আপডেট হয়েছে!"); 
-            } catch (err) { console.error(err); }
-        };
-
-        // ------------------ BANNER MANAGEMENT ------------------
-        document.getElementById('banner-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                await addDoc(collection(db, "banners"), {
-                    image: document.getElementById('banner-img').value,
-                    link: document.getElementById('banner-link').value,
-                    createdAt: serverTimestamp()
-                });
-                alert("ব্যানার যুক্ত হয়েছে!");
-                e.target.reset();
-                loadBanners(); // Reload list
-            } catch (err) { alert(err.message); }
-        });
-
-        async function loadBanners() {
-            const q = query(collection(db, "banners"), orderBy("createdAt", "desc"));
-            const snapshot = await getDocs(q);
-            const container = document.getElementById('banner-list');
-            container.innerHTML = '';
-
-            snapshot.forEach(docSnap => {
-                const banner = docSnap.data();
-                container.innerHTML += `
-                    <div style="position: relative;">
-                        <img src="${banner.image}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px;">
-                        <button onclick="deleteBanner('${docSnap.id}')" style="position: absolute; top: 5px; right: 5px; background: red; color: white; border: none; padding: 5px; cursor: pointer;">X</button>
+        // Load Books for Admin
+        async function loadAdminBooks() {
+            const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+            const snap = await getDocs(q);
+            const list = document.getElementById('admin-book-list');
+            list.innerHTML = '';
+            
+            snap.forEach(d => {
+                const book = d.data();
+                const div = document.createElement('div');
+                div.style = "background: white; padding: 10px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between;";
+                div.innerHTML = `
+                    <span><b>${book.title}</b> (${book.category}) - ৳${book.price}</span>
+                    <div>
+                        <button class="edit-btn" onclick="startEdit('${d.id}', '${book.title}', '${book.author}', '${book.category}', '${book.price}', '${book.image}')">Edit</button>
+                        <button class="delete-btn" onclick="deleteBook('${d.id}')">Delete</button>
                     </div>
                 `;
+                list.appendChild(div);
             });
         }
 
-        window.deleteBanner = async (id) => {
-            if(confirm("আপনি কি এই ব্যানারটি ডিলিট করতে চান?")) {
-                await deleteDoc(doc(db, "banners", id));
-                loadBanners();
+        // Edit Helper (Global function)
+        window.startEdit = (id, title, author, cat, price, img) => {
+            isEditing = true;
+            document.getElementById('edit-id').value = id;
+            document.getElementById('book-title').value = title;
+            document.getElementById('book-author').value = author;
+            document.getElementById('book-category').value = cat;
+            document.getElementById('book-price').value = price;
+            document.getElementById('book-image').value = img;
+            
+            // Description needs separate fetch or passing carefully (simplified here)
+            document.getElementById('submit-btn').innerText = "আপডেট করুন";
+            document.getElementById('cancel-edit').style.display = "block";
+            window.scrollTo(0,0);
+        };
+
+        // Reset Form
+        function resetForm() {
+            isEditing = false;
+            form.reset();
+            document.getElementById('submit-btn').innerText = "আপলোড করুন";
+            document.getElementById('cancel-edit').style.display = "none";
+        }
+        document.getElementById('cancel-edit').addEventListener('click', resetForm);
+
+        // Delete Helper
+        window.deleteBook = async (id) => {
+            if(confirm("বইটি ডিলিট করতে চান?")) {
+                await deleteDoc(doc(db, "products", id));
+                loadAdminBooks();
             }
         };
 
+        // Section Switcher
+        window.showSection = (sec) => {
+            document.getElementById('sec-products').style.display = 'none';
+            document.getElementById('sec-banners').style.display = 'none';
+            document.getElementById('sec-' + sec).style.display = 'block';
+        };
+
+        // Banner Logic
+        document.getElementById('banner-form').addEventListener('submit', async e => {
+            e.preventDefault();
+            await addDoc(collection(db, "banners"), { 
+                image: document.getElementById('banner-img').value, 
+                createdAt: serverTimestamp() 
+            });
+            alert("ব্যানার যুক্ত হয়েছে");
+            e.target.reset();
+        });
     </script>
 </body>
 </html>
