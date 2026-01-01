@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>এডমিন প্যানেল | সাইন্সল্যাব</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html" class="logo">সাইন্সল্যাব এডমিন</a>
+        <button id="logout-btn" style="display:none; padding: 5px 10px; cursor: pointer;">লগআউট</button>
+    </header>
+
+    <div class="container">
+        <div id="login-section" class="admin-panel">
+            <h2>এডমিন লগইন</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="email" id="admin-email" placeholder="ইমেইল" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="admin-pass" placeholder="পাসওয়ার্ড" required>
+                </div>
+                <button type="submit" class="buy-btn">লগইন</button>
+            </form>
+        </div>
+
+        <div id="dashboard-section" style="display: none;">
+            
+            <div class="admin-panel" style="margin-bottom: 30px; border-left: 5px solid var(--primary);">
+                <h2>নতুন বই আপলোড করুন</h2>
+                <form id="upload-form">
+                    <div class="form-group">
+                        <input type="text" id="book-title" placeholder="বইয়ের নাম" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="number" id="book-price" placeholder="দাম (টাকা)" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="url" id="book-image" placeholder="বইয়ের ছবির লিংক (URL)" required>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="book-desc" rows="4" placeholder="বইয়ের বিবরণ"></textarea>
+                    </div>
+                    <button type="submit" class="buy-btn">আপলোড করুন</button>
+                </form>
+            </div>
+
+            <div class="admin-panel">
+                <h2>অর্ডার তালিকা</h2>
+                <div id="order-list" class="order-list">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, db, signInWithEmailAndPassword, onAuthStateChanged, signOut, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from './firebase-config.js';
+
+        const loginSection = document.getElementById('login-section');
+        const dashboardSection = document.getElementById('dashboard-section');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // অথেনটিকেশন চেক
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                loginSection.style.display = 'none';
+                dashboardSection.style.display = 'block';
+                logoutBtn.style.display = 'block';
+                loadOrders();
+            } else {
+                loginSection.style.display = 'block';
+                dashboardSection.style.display = 'none';
+                logoutBtn.style.display = 'none';
+            }
+        });
+
+        // লগইন ফাংশন
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-pass').value;
+            signInWithEmailAndPassword(auth, email, pass)
+                .catch((error) => alert("লগইন ব্যর্থ হয়েছে: " + error.message));
+        });
+
+        // লগআউট
+        logoutBtn.addEventListener('click', () => signOut(auth));
+
+        // বই আপলোড
+        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('book-title').value;
+            const price = document.getElementById('book-price').value;
+            const image = document.getElementById('book-image').value;
+            const desc = document.getElementById('book-desc').value;
+
+            try {
+                await addDoc(collection(db, "products"), {
+                    title, price, image, description: desc, createdAt: serverTimestamp()
+                });
+                alert("বই সফলভাবে আপলোড হয়েছে!");
+                e.target.reset();
+            } catch (err) {
+                console.error(err);
+                alert("আপলোড ব্যর্থ হয়েছে।");
+            }
+        });
+
+        // অর্ডার লোড করা
+        async function loadOrders() {
+            const q = query(collection(db, "orders"), orderBy("date", "desc"));
+            const querySnapshot = await getDocs(q);
+            const orderContainer = document.getElementById('order-list');
+            orderContainer.innerHTML = '';
+
+            querySnapshot.forEach((doc) => {
+                const order = doc.data();
+                const div = document.createElement('div');
+                div.className = 'order-item';
+                div.innerHTML = `
+                    <strong>গ্রাহক:</strong> ${order.customerName} (${order.phone})<br>
+                    <strong>বই:</strong> ${order.product} - ৳${order.price}<br>
+                    <strong>ঠিকানা:</strong> ${order.address}<br>
+                    <small>সময়: ${order.date ? order.date.toDate().toLocaleString() : 'N/A'}</small>
+                `;
+                orderContainer.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
