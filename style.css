@@ -238,3 +238,29 @@ footer {
         margin: 5px auto; /* Center underline */
     }
 }
+
+
+/* Product Details Page (Boisodai Style) */
+.details-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 40px;
+    background: var(--white);
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    align-items: start; /* ছবিটি উপরে থাকবে */
+}
+
+.details-img {
+    text-align: center; /* ছবি মাঝখানে থাকবে */
+}
+
+.details-img img {
+    width: 100%; /* কন্টেইনারের পুরোটা নিবে */
+    max-width: 400px; /* কিন্তু 400px এর বেশি বড় হবে না */
+    height: auto; /* উচ্চতা অটোমেটিক ঠিক থাকবে */
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    object-fit: cover; /* ছবি ক্রপ হবে না */
+}
