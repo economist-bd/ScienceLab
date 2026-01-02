@@ -1,22 +1,69 @@
-<script type="module">
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>বইয়ের বিস্তারিত | সাইন্সল্যাব</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <div class="navbar">
+            <a href="index.html" class="logo">সাইন্সল্যাব</a>
+            <a href="index.html" class="nav-link"><i class="fas fa-home"></i> হোম</a>
+        </div>
+    </header>
+
+    <div class="container">
+        
+        <div class="details-wrapper" id="details-container">
+            <div style="text-align:center; padding: 50px;">তথ্য লোড হচ্ছে...</div>
+        </div>
+
+        <div id="related-products-section" style="display: none; margin-top: 50px; border-top: 1px solid #eee; padding-top: 30px;">
+            <div class="section-title">এই ক্যাটাগরির আরও বই</div>
+            <div class="scroll-container" id="related-list">
+                </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section about">
+                <h3>সাইন্সল্যাব</h3>
+                <p>শিক্ষার্থীদের জন্য সুলভ মূল্যে একাডেমিক, এডমিশন এবং সাহিত্য বইয়ের বিশ্বস্ত প্রতিষ্ঠান।</p>
+            </div>
+            <div class="footer-section contact">
+                <h3>যোগাযোগ</h3>
+                <p>01715247588</p>
+            </div>
+        </div>
+        <div class="footer-bottom">&copy; ২০২৬ সাইন্সল্যাব</div>
+    </footer>
+
+    <script type="module">
         import { db, doc, getDoc, collection, addDoc, serverTimestamp, query, where, getDocs, limit } from './firebase-config.js';
 
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
+        
+        // এলিমেন্টগুলো ধরা হচ্ছে
         const container = document.getElementById('details-container');
         const relatedSection = document.getElementById('related-products-section');
         const relatedList = document.getElementById('related-list');
 
-        console.log("Product Page Loaded. Product ID:", productId); // ডিবাগিং
-
         async function loadProduct() {
-            // ১. আইডি না থাকলে হোম পেইজে ফেরত পাঠাবে বা এরর দেখাবে
+            // সেফটি চেক: যদি container না পাওয়া যায়, তবে কোড থামিয়ে দেবে (এরর আটকাতে)
+            if (!container) {
+                console.error("Error: 'details-container' ID টি HTML এ খুঁজে পাওয়া যাচ্ছে না!");
+                return;
+            }
+
             if (!productId) {
-                container.innerHTML = `
-                    <div style="text-align:center; padding: 50px;">
-                        <h3>কোনো বই সিলেক্ট করা হয়নি!</h3>
-                        <p>দয়া করে <a href="index.html" style="color:var(--primary);">হোম পেইজ</a> থেকে একটি বই সিলেক্ট করুন।</p>
-                    </div>`;
+                container.innerHTML = "<p style='text-align:center; padding:20px;'>কোনো বই সিলেক্ট করা হয়নি। <a href='index.html'>হোম পেজে যান</a></p>";
                 return;
             }
 
@@ -25,9 +72,10 @@
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    console.log("Product Found:", docSnap.data()); // ডিবাগিং
                     const data = docSnap.data();
-                    
+                    console.log("Product Data Loaded:", data); // কনসোলে দেখার জন্য
+
+                    // প্রোডাক্ট ডিটেইলস রেন্ডার
                     container.innerHTML = `
                         <div class="details-img">
                             <img src="${data.image}" alt="${data.title}">
@@ -59,40 +107,46 @@
                     `;
 
                     // অর্ডার লজিক
-                    document.getElementById('order-form').addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        const btn = e.target.querySelector('button');
-                        btn.innerText = "প্রসেসিং...";
-                        btn.disabled = true;
+                    const orderForm = document.getElementById('order-form');
+                    if (orderForm) {
+                        orderForm.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            const btn = e.target.querySelector('button');
+                            btn.innerText = "প্রসেসিং...";
+                            btn.disabled = true;
 
-                        try {
-                            await addDoc(collection(db, "orders"), {
-                                productId: productId,
-                                product: data.title,
-                                price: data.price,
-                                customerName: document.getElementById('name').value,
-                                phone: document.getElementById('phone').value,
-                                address: document.getElementById('address').value,
-                                status: 'Pending',
-                                date: serverTimestamp()
-                            });
-                            alert("অর্ডার সফল হয়েছে!");
-                            window.location.href = "index.html";
-                        } catch (error) {
-                            alert("অর্ডার ব্যর্থ হয়েছে: " + error.message);
-                            btn.disabled = false;
-                        }
-                    });
+                            try {
+                                await addDoc(collection(db, "orders"), {
+                                    productId: productId,
+                                    product: data.title,
+                                    price: data.price,
+                                    customerName: document.getElementById('name').value,
+                                    phone: document.getElementById('phone').value,
+                                    address: document.getElementById('address').value,
+                                    status: 'Pending',
+                                    date: serverTimestamp()
+                                });
+                                alert("অর্ডার সফল হয়েছে!");
+                                window.location.href = "index.html";
+                            } catch (error) {
+                                alert("সমস্যা হয়েছে: " + error.message);
+                                btn.disabled = false;
+                                btn.innerText = "অর্ডার কনফার্ম করুন";
+                            }
+                        });
+                    }
 
                     // রিলেটেড প্রোডাক্ট লোড
-                    if (data.category) loadRelatedProducts(data.category, productId);
+                    if (data.category) {
+                        loadRelatedProducts(data.category, productId);
+                    }
 
                 } else {
-                    container.innerHTML = "<p>বইটি ডাটাবেজে নেই (ভুল আইডি)।</p>";
+                    container.innerHTML = "<p style='text-align:center;'>দুঃখিত, বইটি ডাটাবেজে পাওয়া যায়নি।</p>";
                 }
             } catch (err) {
-                console.error("Firebase Error:", err);
-                container.innerHTML = `<p style="color:red;">সমস্যা হয়েছে: ${err.message}.<br> আপনি কি লোকাল সার্ভার ব্যবহার করছেন?</p>`;
+                console.error("Loading Error:", err);
+                container.innerHTML = "<p style='text-align:center; color:red;'>তথ্য লোড করতে সমস্যা হয়েছে।</p>";
             }
         }
 
@@ -100,9 +154,11 @@
             try {
                 const q = query(collection(db, "products"), where("category", "==", category), limit(6));
                 const snap = await getDocs(q);
+                
                 if (snap.size > 1 || (snap.size === 1 && snap.docs[0].id !== currentId)) {
                     relatedSection.style.display = 'block';
                     relatedList.innerHTML = '';
+
                     snap.forEach(doc => {
                         if (doc.id !== currentId) {
                             const rData = doc.data();
@@ -117,7 +173,9 @@
                         }
                     });
                 }
-            } catch (e) { console.log("Related product load error", e); }
+            } catch (e) {
+                console.log("Related products error:", e);
+            }
         }
 
         function formatCategory(cat) {
@@ -127,3 +185,5 @@
 
         loadProduct();
     </script>
+</body>
+</html>
